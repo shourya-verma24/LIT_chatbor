@@ -2,15 +2,14 @@ import os
 import discord
 import nltk
 import threading
-import asyncio
 from flask import Flask, render_template, request
-from dotenv import load_dotenv  # Load environment variables
+from dotenv import load_dotenv
 from nltk.chat.util import Chat, reflections
 from discord.ext import commands
 
-# Load environment variables from .env file
+# Load environment variables
 load_dotenv()
-TOKEN = os.getenv("DISCORD_BOT_TOKEN")  # Get the token securely
+TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 
 # Define chatbot responses
 pairs = [
@@ -38,7 +37,7 @@ def chatbot_response():
     response = chatbot.respond(user_message)
     return response
 
-# Discord bot setup using commands.Bot
+# Discord bot setup
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
@@ -55,18 +54,13 @@ async def on_message(message):
     response = chatbot.respond(message.content)
     await message.channel.send(response)
 
-# Function to run Flask
+# Run Flask in a separate thread
 def run_flask():
-    app.run(debug=True, use_reloader=False)
+    app.run(debug=True, use_reloader=False, host="0.0.0.0", port=5000)
 
-# Function to run Discord bot asynchronously
-async def run_discord_bot():
-    await bot.start(TOKEN)  # Now the token is hidden
-
-# Run both Flask and Discord bot simultaneously
 if __name__ == "__main__":
-    threading.Thread(target=run_flask).start()
-    
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(run_discord_bot())
+    # Start Flask in a new thread
+    threading.Thread(target=run_flask, daemon=True).start()
+
+    # Run Discord bot
+    bot.run(TOKEN)
